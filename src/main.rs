@@ -1,15 +1,30 @@
 use rand::{Rng, thread_rng};
+use std::fs;
+
+enum Corpus<'a> {
+    FromFile(&'a str), 
+    FromLanguage(&'a str)
+}
 
 fn main() {
     let mut rng = thread_rng();
-    let language = rng.gen_range(0..3);
+    let language = rng.gen_range(0..4);
     let paragraph = match language {
-        0 => generate_paragraph("english", None, Some(10)),
-        1 => generate_paragraph("french", None, Some(100)),
-        2 => generate_paragraph("spanish", None, Some(1000)),
+        0 => generate_paragraph(Corpus::FromLanguage("english"), Some(100), Some(1000)),
+        1 => generate_paragraph(Corpus::FromLanguage("french"), None, None),
+        2 => generate_paragraph(Corpus::FromLanguage("spanish"), None, Some(500)),
+        3 => generate_paragraph(Corpus::FromFile("sample.txt"), Some(50), None), 
         _ => panic!("Invalid language index"),
     };
     println!("{}", paragraph);
+}
+
+fn read_corpus_from_file(path: &str) -> Vec<String> {
+    fs::read_to_string(path)
+        .expect("Failed to parse file.")
+        .split("\n")
+        .map(|s| s.to_owned())
+        .collect::<Vec<String>>()
 }
 
 fn get_corpus(language: &str) -> Vec<&str> {
@@ -39,9 +54,20 @@ fn get_corpus(language: &str) -> Vec<&str> {
     }
 }
 
-fn generate_paragraph(language: &str, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
+fn generate_paragraph(corpus: Corpus, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
     let mut rng = thread_rng();
-    let word_list = get_corpus(language);
+
+    let word_list: Vec<String> = match corpus {
+        Corpus::FromFile(f) => {
+            read_corpus_from_file(f)
+        }, 
+        Corpus::FromLanguage(l) => {
+            get_corpus(l)
+                .iter()
+                .map(|s| s.to_string())
+                .collect()
+        }
+    };
 
     let n_sentences;
     if let Some(n) = min_sentences {
@@ -56,7 +82,7 @@ fn generate_paragraph(language: &str, min_sentences: Option<usize>, max_bytes: O
         let mut words = Vec::new();
         for _ in 0..n_words {
             let word_index = rng.gen_range(0..word_list.len());
-            let word = word_list[word_index];
+            let word = word_list[word_index].as_str();
             words.push(word);
         }
 
