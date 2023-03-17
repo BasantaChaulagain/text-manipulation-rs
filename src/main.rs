@@ -1,5 +1,5 @@
 use rand::{Rng, thread_rng};
-use std::fs;
+use std::{fs, error::Error, io::{Write}, time::{SystemTime, UNIX_EPOCH}};
 
 enum Corpus<'a> {
     FromFile(&'a str), 
@@ -20,6 +20,12 @@ fn main() {
         _ => panic!("Invalid language index"),
     };
     println!("{}", paragraph);
+    
+    let res = write_paragraph_to_file(paragraph, None);
+    match res {
+        Ok(_) => println!("File created successfully."), 
+        Err(e) => panic!("{}", e.to_string())
+    };
 }
 
 fn read_corpus_from_file(path: &str) -> Vec<String> {
@@ -28,6 +34,25 @@ fn read_corpus_from_file(path: &str) -> Vec<String> {
         .split("\n")
         .map(|s| s.to_owned())
         .collect::<Vec<String>>()
+}
+
+fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bool, Box<dyn Error>> {
+    let file_name = match path {
+        Some(x) => x, 
+        None => {
+            let time = SystemTime::now().duration_since(UNIX_EPOCH)?;
+            let path = format!("{}.txt", time.as_secs());
+            path
+        }
+    };
+
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(file_name)?;
+    file.write_all(paragraph.as_bytes())?;
+
+    Ok(true)
 }
 
 fn generate_paragraph(corpus: Corpus, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
