@@ -62,7 +62,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "text_manipulation"
+name = "text_manipulation_rs"
 version = "0.1.0"
 dependencies = [
  "rand",

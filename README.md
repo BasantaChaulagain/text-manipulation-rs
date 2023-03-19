@@ -3,7 +3,7 @@
 ## Usage
 Include the crate name version in Cargo.toml file, and use the crate in the source file. The parameters of the function `generate_text_for_language` are language: i32 which takes integers from 0 to 7 (see below for mapping) and write_to_file: bool which writes to a file if true.
 ```
-use text_manipulation::text_manipulation;
+use text_manipulation_rs::text_manipulation;
 ...
 text_manipulation::generate_text_for_language(language: i32, write_to_file: bool);
 ```

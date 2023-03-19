@@ -1,11 +1,11 @@
 [package]
-name = "text_manipulation"
+name = "text_manipulation_rs"
 version = "0.1.0"
 edition = "2021"
 homepage = "https://github.com/BasantaChaulagain/text-manipulation-rs.git"
 description = "A crate for generating random placeholder text in different languages."
 repository = "https://github.com/BasantaChaulagain/text-manipulation-rs.git"
-keywords = ["text-manipulation", "random_text_generator", "languages"]
+keywords = ["text-manipulation", "random-text-generate", "languages"]
 categories = ["text"]
 license = "MIT"
 
