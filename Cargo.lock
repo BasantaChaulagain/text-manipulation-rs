@@ -62,8 +62,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_project"
-version = "0.1.0"
+name = "text_manipulation_rs"
+version = "0.1.1"
 dependencies = [
  "rand",
 ]
