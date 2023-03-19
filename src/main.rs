@@ -1,28 +1,33 @@
 use rand::{Rng, thread_rng};
 use std::fs;
 
+use basanta::main_basanta;
+
 enum Corpus<'a> {
     FromFile(&'a str), 
 }
 
 fn main() {
+    main_basanta::demo();
+
     let mut rng = thread_rng();
     let language = rng.gen_range(0..8);
     let paragraph = match language {
-        0 => generate_paragraph(Corpus::FromFile("english.txt"), Some(100), Some(1000)),
-        1 => generate_paragraph(Corpus::FromFile("french.txt"), None, None),
-        2 => generate_paragraph(Corpus::FromFile("spanish.txt"), None, Some(500)),
-        3 => generate_paragraph(Corpus::FromFile("hindi.txt"), Some(50), None),
-        4 => generate_paragraph(Corpus::FromFile("russian.txt"), Some(50), None),
-        5 => generate_paragraph(Corpus::FromFile("arabic.txt"), Some(50), None),
-        6 => generate_paragraph(Corpus::FromFile("japanese.txt"), Some(50), None),
-        7 => generate_paragraph(Corpus::FromFile("german.txt"), Some(50), None),
+        0 => generate_paragraph(Corpus::FromFile("src/english.txt"), Some(100), Some(1000)),
+        1 => generate_paragraph(Corpus::FromFile("src/french.txt"), None, None),
+        2 => generate_paragraph(Corpus::FromFile("src/spanish.txt"), None, Some(500)),
+        3 => generate_paragraph(Corpus::FromFile("src/hindi.txt"), Some(50), None),
+        4 => generate_paragraph(Corpus::FromFile("src/russian.txt"), Some(50), None),
+        5 => generate_paragraph(Corpus::FromFile("src/arabic.txt"), Some(50), None),
+        6 => generate_paragraph(Corpus::FromFile("src/japanese.txt"), Some(50), None),
+        7 => generate_paragraph(Corpus::FromFile("src/german.txt"), Some(50), None),
         _ => panic!("Invalid language index"),
     };
     println!("{}", paragraph);
 }
 
 fn read_corpus_from_file(path: &str) -> Vec<String> {
+    print!("{:?}", path);
     fs::read_to_string(path)
         .expect("Failed to parse file.")
         .split("\n")

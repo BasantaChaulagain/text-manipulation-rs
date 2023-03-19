@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "basanta"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bf307859f5e0d05deb28bad61568ea6373d815aeca7877f2aa58cc353f7217c"
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -65,6 +71,7 @@ dependencies = [
 name = "rust_project"
 version = "0.1.0"
 dependencies = [
+ "basanta",
  "rand",
 ]
 
