@@ -1,5 +1,5 @@
 [package]
-name = "text_manipulation_rs"
+name = "text_manipulation"
 version = "0.1.0"
 edition = "2021"
 homepage = "https://github.com/BasantaChaulagain/text-manipulation-rs.git"
