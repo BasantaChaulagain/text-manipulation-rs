@@ -4,10 +4,13 @@ use std::{fs, error::Error, io::{Write}, time::{SystemTime, UNIX_EPOCH}};
 enum Corpus<'a> {
     FromFile(&'a str), 
 }
-
-fn main() {
+fn main(){
     let mut rng = thread_rng();
     let language = rng.gen_range(0..8);
+    generate_text_for_language(language, false);
+}
+
+fn generate_text_for_language(language: i32, write_to_file: bool) {
     let paragraph = match language {
         0 => generate_paragraph(Corpus::FromFile("english.txt"), Some(100), Some(1000)),
         1 => generate_paragraph(Corpus::FromFile("french.txt"), None, None),
@@ -21,11 +24,13 @@ fn main() {
     };
     println!("{}", paragraph);
     
-    let res = write_paragraph_to_file(paragraph, None);
-    match res {
-        Ok(_) => println!("File created successfully."), 
-        Err(e) => panic!("{}", e.to_string())
-    };
+    if write_to_file == true{
+        let res = write_paragraph_to_file(paragraph, None);
+        match res {
+            Ok(_) => println!("File created successfully."), 
+            Err(e) => panic!("{}", e.to_string())
+        };
+    }
 }
 
 fn read_corpus_from_file(path: &str) -> Vec<String> {
