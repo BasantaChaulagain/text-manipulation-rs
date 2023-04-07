@@ -8,6 +8,11 @@ use text_generator::generate_text_for_language;
 mod my_memory;
 use my_memory::translate_q_langpair;
 
+#[path = "lib/dictionary.rs"]
+mod dictionary;
+use dictionary::get_meaning;
+
+
 fn main(){
     // let mut rng = thread_rng();
     // let language = rng.gen_range(0..8);
@@ -21,6 +26,10 @@ fn main(){
 
     deepl();
 }
+
+
+// commenting for now, is not a running code..
+/*
 
 fn deepl() {
     let secret = read_secret("secret.txt");
@@ -87,3 +96,5 @@ fn deepl() {
     //     println!("Failed to create glossary");
     // }
 }
+
+ */

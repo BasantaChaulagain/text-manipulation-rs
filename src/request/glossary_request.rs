@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use crate::deepl::{SourceLang, TargetLang, Glossary};
-use crate::DeepLKey;
+use crate::deepl::{SourceLang, TargetLang, Glossary, DeepLKey};
 use crate::request::http_request::{HttpRequest, RequestType};
 use serde_json::Value;
 

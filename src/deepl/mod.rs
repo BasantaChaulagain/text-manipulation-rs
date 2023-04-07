@@ -9,14 +9,13 @@ fn read_secret(path: &str) -> String {
         .expect("Failed to parse file.")
 }
 
-struct DeepLKey {
+pub struct DeepLKey {
     pub key: String, 
 }
 
 impl<'a> DeepLKey {
     pub fn new(path: &'a str) -> Result<DeepLKey, std::io::Error> {
-        let key = fs::read_to_string(path)
-            .expect("Failed to parse file.");
+        let key = read_secret(path);
 
         Ok(DeepLKey {key})
     }

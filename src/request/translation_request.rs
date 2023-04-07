@@ -1,6 +1,5 @@
 //use crate::deepl::deepl::
-use crate::deepl::{Formality, SplitSentences, SourceLang, TargetLang, TagHandling};
-use crate::DeepLKey;
+use crate::deepl::{Formality, SplitSentences, SourceLang, TargetLang, TagHandling, DeepLKey};
 use crate::request::http_request::{HttpRequest, RequestType};
 
 pub struct TranslationRequest<'a> {
