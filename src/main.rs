@@ -12,6 +12,9 @@ use my_memory::translate_q_langpair;
 mod dictionary;
 use dictionary::get_meaning;
 
+use text_manipulation_rs::deepl::{DeepLKey, TargetLang, SourceLang};
+use text_manipulation_rs::request::translation_request::{TranslationRequest};
+//use text_manipulation_rs::request::glossary_request::{get_glossaries, get_glossary, delete_glossary};
 
 fn main(){
     // let mut rng = thread_rng();
@@ -27,26 +30,21 @@ fn main(){
     deepl();
 }
 
-
-// commenting for now, is not a running code..
-/*
-
 fn deepl() {
-    let secret = read_secret("secret.txt");
-    let auth = DeepLKey{key: secret};
+    let auth = DeepLKey::new("secret.txt").unwrap();
 
     //translation
 
-    let text = ["Philosophy is based on a false pretense, so philosophy itself is nonsense."];
+    // let text = ["Philosophy is based on a false pretense, so philosophy itself is nonsense."];
 
-    let tr = TranslationRequest::new(Box::new(text), TargetLang::De);
-    let request = TranslationRequest::create_request(&tr, &auth);
+    // let tr = TranslationRequest::new(Box::new(text), TargetLang::De);
+    // let request = TranslationRequest::create_request(&tr, &auth);
 
-    let res = request.execute();
-    match res {
-        Ok(v) => println!("OK: {}", v), 
-        Err(_) => println!("Flop")
-    };
+    // let res = request.execute();
+    // match res {
+    //     Ok(v) => println!("OK: {}", v), 
+    //     Err(_) => println!("Flop")
+    // };
 
     //glossary fun
 
@@ -96,5 +94,3 @@ fn deepl() {
     //     println!("Failed to create glossary");
     // }
 }
-
- */
