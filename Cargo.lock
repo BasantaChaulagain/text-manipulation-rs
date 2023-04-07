@@ -403,6 +403,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
+<<<<<<< HEAD
 name = "libz-sys"
 version = "1.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -415,6 +416,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> refs/remotes/origin/develop
 name = "linux-raw-sys"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -712,6 +715,7 @@ name = "serde"
 version = "1.0.159"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c04e8343c3daeec41f58990b9d77068df31209f2af111e059e9fe9646693065"
+<<<<<<< HEAD
 dependencies = [
  "serde_derive",
 ]
@@ -726,6 +730,8 @@ dependencies = [
  "quote",
  "syn 2.0.13",
 ]
+=======
+>>>>>>> refs/remotes/origin/develop
 
 [[package]]
 name = "serde_json"
@@ -806,12 +812,15 @@ dependencies = [
 
 [[package]]
 name = "text_manipulation_rs"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "curl",
  "rand",
  "reqwest",
+<<<<<<< HEAD
  "serde",
+=======
+>>>>>>> refs/remotes/origin/develop
  "serde_json",
 ]
 
