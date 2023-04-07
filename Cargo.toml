@@ -1,7 +1,13 @@
 [package]
 name = "text_manipulation_rs"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
+homepage = "https://github.com/BasantaChaulagain/text-manipulation-rs.git"
+description = "A crate for generating random placeholder text in different languages."
+repository = "https://github.com/BasantaChaulagain/text-manipulation-rs.git"
+keywords = ["text-manipulation", "random-text-generate", "languages"]
+categories = ["text"]
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
