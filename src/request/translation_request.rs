@@ -1,6 +1,7 @@
 //use crate::deepl::deepl::
 use crate::deepl::{Formality, SplitSentences, SourceLang, TargetLang, TagHandling, DeepLKey};
-use crate::request::http_request::{HttpRequest, RequestType};
+use crate::request::http_request::{HttpRequest, RequestType, HttpResponseType};
+use serde_json::Value;
 
 pub struct TranslationRequest<'a> {
     text: Box<[&'a str]>, 
@@ -104,7 +105,8 @@ impl<'a> TranslationRequest<'a> {
             auth: &auth.key, 
             headers: None, 
             body: Some(par), 
-            request_type: RequestType::Post
+            request_type: RequestType::Post, 
+            response_type: HttpResponseType::Json(Value::Null)
         }
     }
 

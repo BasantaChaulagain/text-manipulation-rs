@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::deepl::{SourceLang, TargetLang, Glossary, DeepLKey};
-use crate::request::http_request::{HttpRequest, RequestType};
+use crate::request::http_request::{HttpRequest, RequestType, HttpResponseType};
 use serde_json::Value;
 
 pub fn create_glossary_from_string(auth: &DeepLKey, name: String, source_lang: SourceLang, target_lang: TargetLang, entries: String) -> Result<Value, Box<dyn std::error::Error>> {
@@ -20,14 +20,18 @@ pub fn create_glossary_from_string(auth: &DeepLKey, name: String, source_lang: S
         headers: None, 
         body: Some(params), 
         request_type: RequestType::Post, 
+        response_type: HttpResponseType::Json(Value::Null)
     };
 
     let res = request.execute();
 
     if let Ok(v) = res {
-        Ok(v)
+        match v {
+            HttpResponseType::Json(val) => Ok(val), 
+            _ => panic!("todo: refactor")
+        }
     } else {
-        panic!("I forgot how to pass error statements")
+        panic!("Error")
     }
 }
 
@@ -40,21 +44,27 @@ pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::err
         auth: &auth.key,
         headers: None, 
         body: None, 
-        request_type: RequestType::Get
+        request_type: RequestType::Get, 
+        response_type: HttpResponseType::Json(Value::Null)
     };
 
     let res = request.execute();
 
     if let Ok(v) = res {
-        let g = &v["glossaries"];
-        let arr = g.as_array().unwrap();
+        match v {
+            HttpResponseType::Json(j) => {
+                let g = &j["glossaries"];
+                let arr = g.as_array().unwrap();
 
-        for entry in arr.to_owned() {
-            let gloss = Glossary::new(entry);
-            glossaries.push(gloss);
+                for entry in arr.to_owned() {
+                    let gloss = Glossary::new(entry);
+                    glossaries.push(gloss);
+                }
+
+                Ok(glossaries)
+            }, 
+            _ => panic!("panic")
         }
-
-        Ok(glossaries)
     } else {
         panic!("I forgot how to pass error statements")
     }
@@ -68,15 +78,21 @@ pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Bo
         endpoint: &endpoint.as_str(), 
         headers: None, 
         body: None, 
-        request_type: RequestType::Get
+        request_type: RequestType::Get, 
+        response_type: HttpResponseType::Json(Value::Null)
     };
 
     let res = request.execute();
 
     if let Ok(g) = res {
-        let glossary = Glossary::new(g);
+        match g {
+            HttpResponseType::Json(j) => {
+                let glossary = Glossary::new(j);
 
-        Ok(glossary)
+                Ok(glossary)
+            }, 
+            _ => panic!("refactor please")
+        }
     } else {
         panic!("Git gud");
     }
@@ -90,17 +106,23 @@ pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<d
         auth: &auth.key, 
         headers: None, 
         body: None, 
-        request_type: RequestType::Delete
+        request_type: RequestType::Delete, 
+        response_type: HttpResponseType::Tsv("".to_string())
     };
 
     let res = request.execute();
 
     if let Ok(m) = res {
-        println!("MESSAGE: {}", m);
+        match m {
+            HttpResponseType::Tsv(message) => {
+                ////TODO: return error if message "Not found" returned
+                println!("MESSAGE: {}", message);
+                Ok(())
+            }, 
+            _ => panic!("fail")
+        }
 
-        //TODO: return error if message "Not found" returned
-
-        Ok(())
+        // Ok(())
     } else {
         panic!("Git gud");
     }
@@ -118,7 +140,8 @@ pub fn get_glossary_entries(auth: &DeepLKey, glossary_id: String) -> Result<Hash
         auth: &auth.key, 
         headers: Some(params), 
         body: None, 
-        request_type: RequestType::Get
+        request_type: RequestType::Get, 
+        response_type: HttpResponseType::Tsv("".to_string())
     };
 
     let res = request.execute();
@@ -126,13 +149,17 @@ pub fn get_glossary_entries(auth: &DeepLKey, glossary_id: String) -> Result<Hash
     if let Ok(map) = res {
         let mut hm : HashMap<String, String> = HashMap::new();
 
-        //TODO: FIX
-        // let rows : Vec<&str> = map.split("\n").collect();
-        // for row in rows {
-        //     let key_val : Vec<&str> = row.split("\t").collect();
+        match map {
+            HttpResponseType::Tsv(t) => {
+                let rows : Vec<&str> = t.split("\n").collect();
+                for row in rows {
+                    let key_val : Vec<&str> = row.split("\t").collect();
 
-        //     hm.insert(key_val[0].to_string(), key_val[1].to_string());
-        // }
+                    hm.insert(key_val[0].to_string(), key_val[1].to_string());
+                }
+            }, 
+            _ => panic!("uh ohhh")
+        }
 
         Ok(hm)
     } else {

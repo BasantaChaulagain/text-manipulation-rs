@@ -14,7 +14,7 @@ use dictionary::get_meaning;
 
 use text_manipulation_rs::deepl::{DeepLKey, TargetLang, SourceLang};
 use text_manipulation_rs::request::translation_request::{TranslationRequest};
-//use text_manipulation_rs::request::glossary_request::{get_glossaries, get_glossary, delete_glossary};
+use text_manipulation_rs::request::glossary_request::{get_glossaries, get_glossary, delete_glossary, get_glossary_entries};
 
 fn main(){
     // let mut rng = thread_rng();
@@ -48,15 +48,15 @@ fn deepl() {
 
     //glossary fun
 
-    // let glossary_request = get_glossaries(&auth);
+    let glossary_request = get_glossaries(&auth);
 
-    // if let Ok(glossaries) = glossary_request {
-    //     for glossary in glossaries {
-    //         println!("NEW GLOSSARY: \n{}\n", glossary);
-    //     }
-    // } else {
-    //     println!("UH OH");
-    // }
+    if let Ok(glossaries) = glossary_request {
+        for glossary in glossaries {
+            println!("NEW GLOSSARY: \n{}\n", glossary);
+        }
+    } else {
+        println!("UH OH");
+    }
 
     // // get specific glossary
     // let gid = "36ee07b0-ddc9-426e-a273-57b1dba75291".to_string();
@@ -69,14 +69,14 @@ fn deepl() {
     // }
 
     // //delete specific glossary
-    // let gid = "2d55f35e-2b81-47d9-a12b-89498e540874".to_string();
-    // let delete_request = delete_glossary(&auth, gid);
+    let gid = "36ee07b0-ddc9-426e-a273-57b1dba75291".to_string();
+    let delete_request = delete_glossary(&auth, gid);
     
-    // if let Ok(()) = delete_request {
-    //     println!("YIPEEEE!");
-    // } else {
-    //     println!("Failed to delete glossary");
-    // }
+    if let Ok(()) = delete_request {
+        println!("YIPEEEE!");
+    } else {
+        println!("Failed to delete glossary");
+    }
 
     //create a glossary
     // let glossary = String::from("Hello\tGabagool\nBye\tVa Fangul");
@@ -92,5 +92,15 @@ fn deepl() {
     //     println!("entry_count: {}", g["entry_count"]);
     // } else {
     //     println!("Failed to create glossary");
+    // }
+
+    //get glossary entries
+    // let gid = "98df5d07-9e20-4bba-84ca-e7c9f3d2add2".to_string();
+    // let glossary_request = get_glossary_entries(&auth, gid);
+
+    // if let Ok(hm) = glossary_request {
+    //     println!("HM: {:?}", hm);
+    // } else {
+    //     panic!("hash map failed")
     // }
 }

@@ -13,11 +13,17 @@ pub struct HttpRequest<'a> {
     pub auth: &'a String, 
     pub headers: Option<Vec<String>>, 
     pub body: Option<Vec<String>>, 
-    pub request_type: RequestType
+    pub request_type: RequestType, 
+    pub response_type: HttpResponseType
+}
+
+pub enum HttpResponseType {
+    Json(Value), 
+    Tsv(String), 
 }
 
 impl<'a> HttpRequest<'a> {
-    pub fn execute(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub fn execute(&self) -> Result<HttpResponseType, Box<dyn std::error::Error>> {
         let mut easy = Easy::new();
         easy.url(&self.endpoint).unwrap();
 
@@ -96,11 +102,29 @@ impl<'a> HttpRequest<'a> {
         //     Ok("".to_string())
         // }
 
-        let val = serde_json::from_str(s);
-        if let Ok(x) = val {
-            Ok(x)
-        } else {
-            panic!("uh oh");
+        match &self.response_type {
+            HttpResponseType::Json(_) => {
+                let val = serde_json::from_str(s);
+                match val {
+                    Ok(j) => Ok(HttpResponseType::Json(j)), 
+                    Err(e) => Err(Box::new(e))
+                }
+                // if let Ok(j) = val {
+                //     Ok(HttpResponseType::Json(j))
+                // } else {
+                //     Err(Box::new(std::error::Error))
+                // }
+            }, 
+            HttpResponseType::Tsv(_) => {
+                Ok(HttpResponseType::Tsv(s.to_string()))
+            }
         }
+
+        // let val = serde_json::from_str(s);
+        // if let Ok(x) = val {
+        //     Ok(x)
+        // } else {
+        //     panic!("uh oh");
+        // }
     }
 }
