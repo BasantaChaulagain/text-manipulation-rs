@@ -21,13 +21,15 @@ fn main(){
     // let language = rng.gen_range(0..8);
     // generate_text_for_language(language, false);
 
-
     // let q = String::from("My name is Aaron"); 
     // let langpair = String::from("en|hi"); 
     // let translated_text = translate_q_langpair(q, langpair);
     // println!("{}", translated_text);
 
-    deepl();
+    let meaning = get_meaning("university");
+    println!("{:#?}", meaning);
+
+    // deepl();
 }
 
 fn deepl() {

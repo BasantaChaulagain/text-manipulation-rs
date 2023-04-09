@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fs;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Definition {
@@ -7,8 +8,13 @@ struct Definition {
     short_definitions: Vec<String>,
 }
 
+fn get_secret_key() -> Result<String, Box<dyn std::error::Error>> {
+    let key = fs::read_to_string("dict_secret.txt")?;
+    Ok(key)
+}
+
 pub fn get_meaning(word: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let key = "4129012f-10c6-4b89-b6d4-e0fe7e60154f";
+    let key = get_secret_key()?;
 
     let url = format!(
         "https://dictionaryapi.com/api/v3/references/collegiate/json/{}/?key={}",
