@@ -18,4 +18,6 @@ text_manipulation::generate_text_for_language(language: i32, write_to_file: bool
 4 => russian \
 5 => arabic \
 6 => japanese \
-7 => german
+7 => german \
+8 => latin \
+9 => czech
