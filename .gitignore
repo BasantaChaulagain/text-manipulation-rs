@@ -1,1 +1,6 @@
 /target
+*/target
+Cargo.lock
+*/Cargo.lock
+secret.txt
+dict_secret.txt
