@@ -29,7 +29,7 @@ fn main(){
     let meaning = get_meaning("university");
     println!("{:#?}", meaning);
 
-    // deepl();
+    deepl();
 }
 
 fn deepl() {
@@ -74,10 +74,15 @@ fn deepl() {
     let gid = "36ee07b0-ddc9-426e-a273-57b1dba75291".to_string();
     let delete_request = delete_glossary(&auth, gid);
     
-    if let Ok(()) = delete_request {
-        println!("YIPEEEE!");
-    } else {
-        println!("Failed to delete glossary");
+    // if let Ok(()) = delete_request {
+    //     println!("YIPEEEE!");
+    // } else {
+    //     println!("Failed to delete glossary");
+    // }
+
+    match delete_request {
+        Ok(_) => println!("Yippee!"),
+        Err(e) => println!("Delete error: {}", e)
     }
 
     //create a glossary

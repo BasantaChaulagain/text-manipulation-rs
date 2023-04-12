@@ -22,15 +22,54 @@ pub enum HttpResponseType {
     Tsv(String), 
 }
 
+#[derive(Debug)]
+pub enum ApiError {
+    Http401, 
+    Http404, 
+    Http429, 
+    Http456, 
+    Http500Plus, 
+    Unknown(u32), 
+    Teapot
+}
+
+impl ApiError {
+    pub fn from_u32(code: u32) -> ApiError {
+        match code {
+            401 => ApiError::Http401, 
+            404 => ApiError::Http404, 
+            429 => ApiError::Http429, 
+            456 => ApiError::Http456, 
+            x if x >= 500 => ApiError::Http500Plus, 
+            _ => ApiError::Unknown(code)
+        }
+    }
+}
+
+impl std::fmt::Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ApiError::Http401 => f.write_str("Unauthorized: Invalid API key"), 
+            ApiError::Http404 => f.write_str("Not Found"),
+            ApiError::Http429 => f.write_str("Too many requests"),
+            ApiError::Http456 => f.write_str("Quota exceeded"),
+            ApiError::Http500Plus => f.write_str("Temporary errors in DeepL service"), 
+            ApiError::Unknown(u) => {
+                let form = format!("HTTP {}", u);
+                f.write_str(&form)
+            }, 
+            ApiError::Teapot => f.write_str("I'm a teapot!")
+        }
+    }
+}
+
+impl std::error::Error for ApiError{}
+
 impl<'a> HttpRequest<'a> {
     pub fn execute(&self) -> Result<HttpResponseType, Box<dyn std::error::Error>> {
         let mut easy = Easy::new();
         easy.url(&self.endpoint).unwrap();
-
-        //let mut bytes: &[u8];
         let mut vec_bytes : Vec<u8> = Vec::new();
-        //
-        //println!("BYTES LEN: {}", bytes.len());
 
         match &self.request_type {
             RequestType::Get => {
@@ -56,8 +95,7 @@ impl<'a> HttpRequest<'a> {
             }, 
         };
 
-        //TODO: Change name
-        let mut foo = &vec_bytes[..];
+        let mut vb = &vec_bytes[..];
 
         let mut list = List::new();
         let header = format!("Authorization: DeepL-Auth-Key {}", &self.auth);
@@ -77,7 +115,7 @@ impl<'a> HttpRequest<'a> {
 
             if vec_bytes.len() > 0 {
                 transfer.read_function(|buf| {
-                    Ok(foo.read(buf).unwrap_or(0))
+                    Ok(vb.read(buf).unwrap_or(0))
                 }).unwrap();
             }
 
@@ -89,18 +127,16 @@ impl<'a> HttpRequest<'a> {
             transfer.perform().unwrap();
         }
 
+        let response_code = easy.response_code().unwrap();
+
+        if response_code != 200 || response_code != 201 {
+            return Err(Box::new(ApiError::from_u32(response_code)));
+        }
+
         let s = match std::str::from_utf8(&data) {
             Ok(v) => v,
-            Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+            Err(e) => return Err(Box::new(e)),
         };
-
-        //TODO: return Accept type
-        // if s.len() > 0 {
-        //     let v : Value = serde_json::from_str(s)?;
-        //     Ok(v["message"].as_str().unwrap().to_string())
-        // } else {
-        //     Ok("".to_string())
-        // }
 
         match &self.response_type {
             HttpResponseType::Json(_) => {
@@ -109,22 +145,10 @@ impl<'a> HttpRequest<'a> {
                     Ok(j) => Ok(HttpResponseType::Json(j)), 
                     Err(e) => Err(Box::new(e))
                 }
-                // if let Ok(j) = val {
-                //     Ok(HttpResponseType::Json(j))
-                // } else {
-                //     Err(Box::new(std::error::Error))
-                // }
             }, 
             HttpResponseType::Tsv(_) => {
                 Ok(HttpResponseType::Tsv(s.to_string()))
             }
         }
-
-        // let val = serde_json::from_str(s);
-        // if let Ok(x) = val {
-        //     Ok(x)
-        // } else {
-        //     panic!("uh oh");
-        // }
     }
 }
