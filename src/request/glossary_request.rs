@@ -66,7 +66,7 @@ pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::err
     
                     for entry in arr.to_owned() {
                         let gloss = Glossary::new(entry);
-                        glossaries.push(gloss);
+                        glossaries.push(gloss.unwrap());
                     }
     
                     Ok(glossaries)
@@ -74,7 +74,10 @@ pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::err
                 _ => Err(Box::new(ApiError::Teapot))
             }
         }, 
-        Err(e) => Err(e)
+        Err(e) => {
+            println!("YOU SUCK : {}", e);
+            Err(e)
+        }
     }
 }
 
@@ -83,7 +86,7 @@ pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Bo
 
     let request = HttpRequest {
         auth: &auth.key, 
-        endpoint: &endpoint.as_str(), 
+        endpoint: endpoint.as_str(), 
         headers: None, 
         body: None, 
         request_type: RequestType::Get, 
@@ -98,12 +101,15 @@ pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Bo
                 HttpResponseType::Json(j) => {
                     let glossary = Glossary::new(j);
     
-                    Ok(glossary)
+                    Ok(glossary.unwrap())
                 }, 
                 _ => Err(Box::new(ApiError::Teapot))
             }
         }, 
-        Err(e) => Err(e)
+        Err(e) => {
+            println!("ee: {}", e);
+            Err(e)
+        }
     }
 }
 

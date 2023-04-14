@@ -129,7 +129,7 @@ impl<'a> HttpRequest<'a> {
 
         let response_code = easy.response_code().unwrap();
 
-        if response_code != 200 || response_code != 201 {
+        if response_code != 200 && response_code != 201 {
             return Err(Box::new(ApiError::from_u32(response_code)));
         }
 

@@ -118,4 +118,57 @@ pub mod text_manipulation{
             }
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use serde_json::{json};
+
+        use crate::deepl::*;
+        use crate::request::*;
+        use crate::request::glossary_request::get_glossaries;
+        use crate::request::glossary_request::get_glossary;
+
+        #[test]
+        fn valid_key_path() {
+            let path = "src/secret.txt";
+            let res = DeepLKey::new(path);
+
+            assert!(!res.is_err());
+        }
+
+        #[test]
+        fn invalid_key_path() {
+            assert!(DeepLKey::new("").is_err());
+        }
+
+        #[test]
+        fn invalid_glossary_json() {
+            let obj = json!({"foo": "A", "bar": "B"});
+            let glossary = Glossary::new(obj);
+
+            assert!(glossary.is_err())
+        }
+
+        #[test]
+        fn valid_glossary_json() {
+            let path = "src/secret.txt";
+            let auth = DeepLKey::new(path).unwrap();
+            let res = get_glossaries(&auth);
+
+            let g = res.unwrap();
+
+            if g.len() == 0 {
+                return;
+            } else {
+                let glossary = g.get(0).unwrap();
+
+                let gid = glossary.glossary_id.to_owned();
+                println!("GID: {}", gid);
+
+                let res2 = get_glossary(&auth, gid);
+
+                assert!(!res2.is_err());
+            }
+        }
+    }
 }
