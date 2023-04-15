@@ -130,9 +130,7 @@ pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<d
     match res {
         Ok(m) => {
             match m {
-                HttpResponseType::Tsv(message) => {
-                    ////TODO: return error if message "Not found" returned
-                    println!("MESSAGE: {}", message);
+                HttpResponseType::Tsv(_) => {
                     Ok(())
                 }, 
                 _ => Err(Box::new(ApiError::Teapot))
@@ -145,7 +143,6 @@ pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<d
 pub fn get_glossary_entries(auth: &DeepLKey, glossary_id: String) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}/entries", glossary_id);
 
-    // let params = vec![];
     let mut params : Vec<String> = Vec::new();
     params.push(String::from("Accept: text/tab-separated-values"));
 

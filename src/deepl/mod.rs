@@ -505,7 +505,7 @@ impl Display for GlossaryError {
 impl std::error::Error for GlossaryError {}
 
 impl Glossary {
-    /// Given a Json object, this method constructs a Glossary object or a dummy Glossary otherwise.
+    /// Given a Json object, this method constructs a Glossary object or a GlossaryError otherwise.
     pub fn new(v: Value) -> Result<Glossary, Box<dyn std::error::Error>> {
         let us = v["source_lang"].as_str().ok_or(GlossaryError)?;
         let upper_source = capitalize(us)?;

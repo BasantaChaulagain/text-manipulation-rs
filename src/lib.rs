@@ -121,10 +121,10 @@ pub mod text_manipulation{
 
     #[cfg(test)]
     mod tests {
-        use serde_json::{json};
+        use serde_json::{json, Value};
 
         use crate::deepl::*;
-        use crate::request::*;
+        use crate::request::http_request::{ApiError, HttpRequest, HttpResponseType, RequestType};
         use crate::request::glossary_request::get_glossaries;
         use crate::request::glossary_request::get_glossary;
 
@@ -169,6 +169,91 @@ pub mod text_manipulation{
 
                 assert!(!res2.is_err());
             }
+        }
+
+        #[test]
+        fn http_error_codes() {
+            assert_eq!(ApiError::from_u32(400), ApiError::Http400);
+            assert_eq!(ApiError::from_u32(401), ApiError::Http401);
+            assert_eq!(ApiError::from_u32(403), ApiError::Http403);
+            assert_eq!(ApiError::from_u32(404), ApiError::Http404);
+            assert_eq!(ApiError::from_u32(429), ApiError::Http429);
+            assert_eq!(ApiError::from_u32(456), ApiError::Http456);
+            assert_ne!(ApiError::from_u32(499), ApiError::Http500Plus);
+            assert_eq!(ApiError::from_u32(500), ApiError::Http500Plus);
+            assert_eq!(ApiError::from_u32(501), ApiError::Http500Plus);
+            assert_eq!(ApiError::from_u32(std::u32::MAX), ApiError::Http500Plus);
+            assert_eq!(ApiError::from_u32(418), ApiError::Teapot);
+            assert_eq!(ApiError::from_u32(200), ApiError::Unknown(200));
+        }
+
+        #[test]
+        fn no_endpoint() {
+            let path = "src/secret.txt";
+            let auth = DeepLKey::new(path).unwrap();
+
+            let request = HttpRequest {
+                endpoint: "", 
+                auth: &auth.key, 
+                headers: None, 
+                body: None, 
+                request_type: RequestType::Get, 
+                response_type: HttpResponseType::Json(Value::Null)
+            };
+
+            let res = request.execute();
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
+        }
+
+        #[test]
+        fn no_auth() {
+            let request = HttpRequest {
+                endpoint: "https://api-free.deepl.com/v2/translate", 
+                auth: &"".to_string(), 
+                headers: None, 
+                body: None, 
+                request_type: RequestType::Get, 
+                response_type: HttpResponseType::Json(Value::Null)
+            };
+
+            let res = request.execute();
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http403);
+        }
+
+        #[test]
+        fn bad_auth() {
+            let request = HttpRequest {
+                endpoint: "https://api-free.deepl.com/v2/translate", 
+                auth: &"aa1111aa-1111-1a1a-1111-1a111aaa1111:fx".to_string(), 
+                headers: None, 
+                body: None, 
+                request_type: RequestType::Get, 
+                response_type: HttpResponseType::Json(Value::Null)
+            };
+
+            let res = request.execute();
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http403);
         }
     }
 }
