@@ -19,6 +19,8 @@ pub mod text_manipulation{
             5 => generate_paragraph(Corpus::FromFile("arabic.txt"), Some(50), None),
             6 => generate_paragraph(Corpus::FromFile("japanese.txt"), Some(50), None),
             7 => generate_paragraph(Corpus::FromFile("german.txt"), Some(50), None),
+            10 => generate_paragraph(Corpus::FromFile("corpus/irish.txt"), Some(50), None),
+            11 => generate_paragraph(Corpus::FromFile("corpus/swedish.txt"), Some(50), None),
             _ => panic!("Invalid language index"),
         };
         println!("{}", paragraph);
@@ -121,8 +123,9 @@ pub mod text_manipulation{
 
     #[cfg(test)]
     mod tests {
+        use std::fs;
         use serde_json::{json, Value};
-
+        use crate::text_manipulation::{generate_paragraph, Corpus, write_paragraph_to_file, generate_text_for_language};
         use crate::deepl::*;
         use crate::request::http_request::{ApiError, HttpRequest, HttpResponseType, RequestType};
         use crate::request::glossary_request::{get_glossaries, get_glossary};
@@ -131,6 +134,43 @@ pub mod text_manipulation{
         fn get_auth() -> DeepLKey {
             DeepLKey::new("src/secret.txt").unwrap()
         }
+
+        #[test]
+        fn test_generate_paragraph() {
+        
+        // Test that the paragraph contains at least one sentence
+            let corpus = Corpus::FromFile("corpus/english.txt");
+            let result = generate_paragraph(corpus, None, None);
+            assert!(result.contains('.'));
+        }    
+        #[test]
+        fn test_max_bytes(){
+        // Test that the paragraph contains no more than the maximum requested number of bytes
+            let corpus = Corpus::FromFile("corpus/english.txt");
+            let max_bytes = Some(10);
+            let result = generate_paragraph(corpus, None, max_bytes);
+            assert!(result.as_bytes().len() <= max_bytes.unwrap());
+        }
+        #[test]
+        // Test if the result is empty when arguments are None
+        fn test_generate_paragraph_default() {
+            let paragraph = generate_paragraph(Corpus::FromFile("corpus/english.txt"), None, None);
+            assert!(!paragraph.is_empty());
+        }
+
+        #[test]
+        fn test_write_paragraph_to_file() {
+            let paragraph = String::from("Hello world!");
+            let res = write_paragraph_to_file(paragraph.clone(), Some(String::from("test.txt")));
+            assert!(res.is_ok());
+
+            let file_content = fs::read_to_string("test.txt");
+            assert_eq!(file_content.unwrap(), paragraph);
+
+            fs::remove_file("test.txt").unwrap();
+        }
+
+        
 
         #[test]
         fn valid_key_path() {

@@ -17,6 +17,8 @@ pub fn generate_text_for_language(language: i32, write_to_file: bool) {
         7 => generate_paragraph(Corpus::FromFile("corpus/german.txt"), Some(50), None),
         8 => generate_paragraph(Corpus::FromFile("corpus/latin.txt"), Some(50), None),
         9 => generate_paragraph(Corpus::FromFile("corpus/czech.txt"), Some(50), None),
+        10 => generate_paragraph(Corpus::FromFile("corpus/irish.txt"), Some(50), None),
+        11 => generate_paragraph(Corpus::FromFile("corpus/swedish.txt"), Some(50), None),
         _ => panic!("Invalid language index"),
     };
     println!("{}", paragraph);
