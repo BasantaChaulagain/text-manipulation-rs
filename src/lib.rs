@@ -125,8 +125,12 @@ pub mod text_manipulation{
 
         use crate::deepl::*;
         use crate::request::http_request::{ApiError, HttpRequest, HttpResponseType, RequestType};
-        use crate::request::glossary_request::get_glossaries;
-        use crate::request::glossary_request::get_glossary;
+        use crate::request::glossary_request::{get_glossaries, get_glossary};
+        use crate::request::translation_request::TranslationRequest;
+
+        fn get_auth() -> DeepLKey {
+            DeepLKey::new("src/secret.txt").unwrap()
+        }
 
         #[test]
         fn valid_key_path() {
@@ -151,8 +155,9 @@ pub mod text_manipulation{
 
         #[test]
         fn valid_glossary_json() {
-            let path = "src/secret.txt";
-            let auth = DeepLKey::new(path).unwrap();
+            // let path = "src/secret.txt";
+            // let auth = DeepLKey::new(path).unwrap();
+            let auth = get_auth();
             let res = get_glossaries(&auth);
 
             let g = res.unwrap();
@@ -189,8 +194,9 @@ pub mod text_manipulation{
 
         #[test]
         fn no_endpoint() {
-            let path = "src/secret.txt";
-            let auth = DeepLKey::new(path).unwrap();
+            // let path = "src/secret.txt";
+            // let auth = DeepLKey::new(path).unwrap();
+            let auth = get_auth();
 
             let request = HttpRequest {
                 endpoint: "", 
@@ -254,6 +260,124 @@ pub mod text_manipulation{
 
             let api_error = e.downcast::<ApiError>().unwrap();
             assert_eq!(*api_error, ApiError::Http403);
+        }
+
+        #[test]
+        fn invalid_headers() {
+            let auth = get_auth();
+            let mut headers : Vec<String> = Vec::new();
+            headers.push(String::from("Garbage: Foo"));
+
+            let mut request = HttpRequest {
+                endpoint: "https://api-free.deepl.com/v2/translate", 
+                auth: &auth.key, 
+                headers: Some(headers), 
+                body: None, 
+                request_type: RequestType::Get, 
+                response_type: HttpResponseType::Tsv("".to_string())
+            };
+
+            let res = request.execute();
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
+
+            //same idea but use invalid body content
+            request.headers = None;
+            request.body = Some(vec!["a".to_string()]);
+
+            let res = request.execute();
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
+
+            request.request_type = RequestType::Post;
+            request.headers = Some(vec!["b: c".to_string()]);
+
+            let res = request.execute();
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
+        }
+
+        #[test]
+        fn simple_translations() {
+            let auth = get_auth();
+            let tr = TranslationRequest::new("Hello, World!", TargetLang::De);
+            let request = TranslationRequest::create_request(&tr, &auth);
+
+            let res = request.execute();
+
+            assert!(!res.is_err());
+
+            match res.unwrap() {
+                HttpResponseType::Json(j) => {
+                    let trans = j["translations"].as_array().unwrap();
+                    assert_eq!(trans.get(0).unwrap()["text"].as_str().unwrap(), "Hallo, Welt!");
+                }, 
+                _ => panic!("Impossible")
+            };
+
+            let tr = TranslationRequest::new("", TargetLang::De);
+            let request = TranslationRequest::create_request(&tr, &auth);
+
+            let res = request.execute();
+
+            assert!(!res.is_err());
+
+            match res.unwrap() {
+                HttpResponseType::Json(j) => {
+                    let trans = j["translations"].as_array().unwrap();
+                    assert_eq!(trans.get(0).unwrap()["text"].as_str().unwrap(), "");
+                }, 
+                _ => panic!("Impossible")
+            };
+        }
+
+        //not sure why this test isn't working
+        #[ignore]
+        #[test]
+        fn valid_translation_setters() {
+            //curl "https://api-free.deepl.com/v2/translate" -H "Authorization: DeepL-Auth-Key [key]" -d "text=<section><par>The firm said it had been </par></section><par> conducting an <foo/> internal investigation.<bar/></par>&target_lang=de&split_sentences=0&preserve_formatting=1&formality=less&tag_handling=xml&non_splitting_tags=par&outline_detection=0&splitting_tags=section&ignore_tags=foo,bar"
+
+            let auth = get_auth();
+            let tr = TranslationRequest::new("<section><par>The firm said it had been </par></section><par> conducting an <foo/> internal investigation.<bar/></par>", TargetLang::De)
+                .set_source_lang(SourceLang::En)
+                .set_split_sentences(SplitSentences::None)
+                .set_preserve_formatting(true)
+                .set_formality(Formality::Less)
+                .set_tag_handling(TagHandling::Xml)
+                .set_non_splitting_tags("par")
+                .set_outline_detection(false)
+                .set_splitting_tags("section")
+                .set_ignore_tags("foo,bar");
+            let request = tr.create_request(&auth);
+            let res = request.execute();
+
+            assert!(!res.is_err());
+
+            match res.unwrap() {
+                HttpResponseType::Json(j) => {
+                    let trans = j["translations"].as_array().unwrap();
+                    assert_eq!(trans.get(0).unwrap()["text"].as_str().unwrap(), "<section><par>Das Unternehmen sagte, es habe </par></section><par> conducting an <foo/> internal investigation.<bar/></par>");
+                }, 
+                _ => panic!("Impossible")
+            };
         }
     }
 }

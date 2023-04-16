@@ -1,24 +1,41 @@
+//! The heart of DeepL's service is translating text, so this module gives users the ability to create complex queries in (ideally) the most user-friendly way possible.
+
 use crate::deepl::{Formality, SplitSentences, SourceLang, TargetLang, TagHandling, DeepLKey};
 use crate::request::http_request::{HttpRequest, RequestType, HttpResponseType};
 use serde_json::Value;
 
+/// This struct contains all the current fields in DeepL's translation API
 pub struct TranslationRequest<'a> {
-    text: Box<[&'a str]>, 
+    /// The text to be translated.
+    text: &'a str, 
     source_lang: Option<SourceLang>, 
     target_lang: TargetLang, 
     split_sentences: Option<SplitSentences>, 
+
+    /// Respect the formatting of the provided text even if this could produce inaccurate results.
     preserve_formatting: Option<bool>, 
     formality: Option<Formality>, 
+
+    /// Glossary to use in this translation
     glossary_id: Option<&'a str>, 
     tag_handling: Option<TagHandling>, 
+
+    /// Comma-separated list of XML tags which never split sentences.
     non_splitting_tags: Option<&'a str>, 
+
+    /// Automatically detect XML structure
     outline_detection: Option<bool>, 
+
+    /// Comma-separated list of XML tags which always cause splits.
     splitting_tags: Option<&'a str>, 
+
+    /// Comma-separated list of XML tags that indicate text not to be translated.
     ignore_tags: Option<&'a str>, 
 }
 
 impl<'a> TranslationRequest<'a> {
-    pub fn new(text: Box<[&'a str]>, target_lang: TargetLang) -> TranslationRequest {
+    /// Given only the required translation parameters, this method returns a basic TranslationRequest with all the other parameters set to their defaults.
+    pub fn new(text: &'a str, target_lang: TargetLang) -> TranslationRequest {
         TranslationRequest {
             text: text, 
             source_lang: None, 
@@ -35,11 +52,11 @@ impl<'a> TranslationRequest<'a> {
         }
     }
 
+    /// Given a TranslationRequest and an API key, this method translates the request into an HttpRequest that can be executed.
     pub fn create_request(&self, auth : &'a DeepLKey) -> HttpRequest {
         let mut par : Vec<String> = Vec::new();
 
-        let text_box = &*self.text;
-        let text_format = format!("text={}", text_box[0]);
+        let text_format = format!("text={}", &self.text);
         par.push(text_format);
 
         if let Some(sl) = &self.source_lang {
@@ -109,51 +126,63 @@ impl<'a> TranslationRequest<'a> {
         }
     }
 
+    // Many setters!
+
+    /// Set the source language.
     pub fn set_source_lang(mut self, sl: SourceLang) -> TranslationRequest<'a> {
         self.source_lang = Some(sl);
         self
     }
 
+    /// Turn split_sentences tag on or off.
     pub fn set_split_sentences(mut self, split: SplitSentences) -> TranslationRequest<'a> {
         self.split_sentences = Some(split);
         self
     }
 
+    /// Turn preserve_formatting tag on or off.
     pub fn set_preserve_formatting(mut self, pf: bool) -> TranslationRequest<'a> {
         self.preserve_formatting = Some(pf);
         self
     }
 
+    /// Set the formality
     pub fn set_formality(mut self, formality: Formality) -> TranslationRequest<'a> {
         self.formality = Some(formality);
         self
     }
 
+    /// Use a glossary ID for this translation
     pub fn set_glossary_id(mut self, id: &'a str) -> TranslationRequest<'a> {
         self.glossary_id = Some(id);
         self
     }
 
+    /// Set the tag handling
     pub fn set_tag_handling(mut self, th: TagHandling) -> TranslationRequest<'a> {
         self.tag_handling = Some(th);
         self
     }
 
+    /// Set the non-splitting tags
     pub fn set_non_splitting_tags(mut self, tags: &'a str) -> TranslationRequest<'a> {
         self.non_splitting_tags = Some(tags);
         self
     }
 
+    /// Turn outline detection on or off.
     pub fn set_outline_detection(mut self, od: bool) -> TranslationRequest<'a> {
         self.outline_detection = Some(od);
         self
     }
 
+    /// Set the splitting tags.
     pub fn set_splitting_tags(mut self, tags: &'a str) -> TranslationRequest<'a> {
         self.splitting_tags = Some(tags);
         self
     }
 
+    /// Set the ignore tags.
     pub fn set_ignore_tags(mut self, tags: &'a str) -> TranslationRequest<'a> {
         self.ignore_tags = Some(tags);
         self
