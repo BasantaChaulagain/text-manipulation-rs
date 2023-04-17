@@ -128,7 +128,7 @@ pub mod text_manipulation{
         use crate::text_manipulation::{generate_paragraph, Corpus, write_paragraph_to_file, generate_text_for_language};
         use crate::deepl::*;
         use crate::request::http_request::{ApiError, HttpRequest, HttpResponseType, RequestType};
-        use crate::request::glossary_request::{get_glossaries, get_glossary};
+        use crate::request::glossary_request::{get_glossaries, get_glossary, delete_glossary, get_glossary_entries, create_glossary_from_string};
         use crate::request::translation_request::TranslationRequest;
 
         fn get_auth() -> DeepLKey {
@@ -136,9 +136,8 @@ pub mod text_manipulation{
         }
 
         #[test]
-        fn test_generate_paragraph() {
-        
-        // Test that the paragraph contains at least one sentence
+        fn test_generate_paragraph() {    
+            // Test that the paragraph contains at least one sentence
             let corpus = Corpus::FromFile("corpus/english.txt");
             let result = generate_paragraph(corpus, None, None);
             assert!(result.contains('.'));
@@ -195,8 +194,6 @@ pub mod text_manipulation{
 
         #[test]
         fn valid_glossary_json() {
-            // let path = "src/secret.txt";
-            // let auth = DeepLKey::new(path).unwrap();
             let auth = get_auth();
             let res = get_glossaries(&auth);
 
@@ -208,7 +205,6 @@ pub mod text_manipulation{
                 let glossary = g.get(0).unwrap();
 
                 let gid = glossary.glossary_id.to_owned();
-                println!("GID: {}", gid);
 
                 let res2 = get_glossary(&auth, gid);
 
@@ -418,6 +414,110 @@ pub mod text_manipulation{
                 }, 
                 _ => panic!("Impossible")
             };
+        }
+
+        #[test]
+        fn create_valid_glossary() {
+            let auth = get_auth();
+            let entries = String::from("Hello\tGuten Tag!\nBye\tAuf Wiedersehen!");
+            let res = create_glossary_from_string(&auth, "unit".to_string(), SourceLang::En, TargetLang::De, entries);
+
+            assert!(!res.is_err());
+
+            let g = Glossary::new(res.unwrap());
+
+            assert!(!g.is_err());
+
+            let glossary = g.unwrap();
+
+            assert_eq!(glossary.entry_count, 2);
+        }
+
+        #[test]
+        fn create_invalid_glossary() {
+            let auth = get_auth();
+            let entries = String::from("\n\n\n");
+            let res = create_glossary_from_string(&auth, "unit2".to_string(), SourceLang::En, TargetLang::De, entries);
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
+        }
+
+        #[test]
+        fn get_all_glossaries() {
+            let auth = get_auth();
+            assert!(!get_glossaries(&auth).is_err());
+        }
+
+        #[test]
+        fn test_delete_glossary() {
+            let auth = get_auth();
+            let entries = String::from("Hello\tGuten Tag!\nBye\tAuf Wiedersehen!");
+            let res = create_glossary_from_string(&auth, "temp".to_string(), SourceLang::En, TargetLang::De, entries);
+            let g = res.unwrap();
+            let glossary = Glossary::new(g).unwrap();
+
+            //delete temp glossary
+            let res = delete_glossary(&auth, glossary.glossary_id);
+
+            assert!(!res.is_err());
+        }
+
+        #[test]
+        fn delete_invalid_glossary() {
+            let auth = get_auth();
+            let res = delete_glossary(&auth, "glossary".to_string());
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
+        }
+
+        #[test]
+        fn test_glossary_entries() {
+            //create temp glossary
+            let auth = get_auth();
+            let entries = String::from("Hello\tGuten Tag!\nBye\tAuf Wiedersehen!");
+            let res = create_glossary_from_string(&auth, "temp".to_string(), SourceLang::En, TargetLang::De, entries);
+            let g = res.unwrap();
+            let glossary = Glossary::new(g).unwrap();
+
+            let entries = get_glossary_entries(&auth, glossary.glossary_id.clone());
+
+            //delete temp glossary
+            let res = delete_glossary(&auth, glossary.glossary_id);
+
+            assert!(!res.is_err());
+
+            assert!(!entries.is_err());
+
+            let hm = entries.unwrap();
+
+            assert_eq!(hm["Hello"], String::from("Guten Tag!"));
+            assert_eq!(hm["Bye"], String::from("Auf Wiedersehen!"));
+        }
+
+        #[test]
+        fn invalid_glossary_entries() {
+            let auth = get_auth();
+            let res = get_glossary_entries(&auth, "glossary".to_string());
+
+            assert!(res.is_err());
+
+            let e = res.err().unwrap();
+            assert!(e.is::<ApiError>());
+
+            let api_error = e.downcast::<ApiError>().unwrap();
+            assert_eq!(*api_error, ApiError::Http400);
         }
     }
 }

@@ -184,7 +184,7 @@ impl<'a> HttpRequest<'a> {
 
         //check response code for potential error
         let response_code = easy.response_code().unwrap();
-        if response_code != 200 && response_code != 201 {
+        if response_code > 299 {
             return Err(Box::new(ApiError::from_u32(response_code)));
         }
 

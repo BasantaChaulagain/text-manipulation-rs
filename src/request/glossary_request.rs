@@ -1,3 +1,5 @@
+//! Glossaries in DeepL are used to manually inform the translation service how certain words should be translated.  Users can use this module to create, delete, and get glossary information and entries.
+
 use std::collections::HashMap;
 
 use crate::deepl::{SourceLang, TargetLang, Glossary, DeepLKey};
@@ -6,6 +8,9 @@ use serde_json::Value;
 
 use super::http_request::ApiError;
 
+/// Given a string of tab-separated values, this function will return the glossary information if it is successfully created.
+/// 
+/// An example of a TSV string is: "Hello\tHallo\nBye\tTschüss".
 pub fn create_glossary_from_string(auth: &DeepLKey, name: String, source_lang: SourceLang, target_lang: TargetLang, entries: String) -> Result<Value, Box<dyn std::error::Error>> {
     let endpoint = "https://api-free.deepl.com/v2/glossaries";
     let mut params : Vec<String> = Vec::new();
@@ -42,6 +47,7 @@ pub fn create_glossary_from_string(auth: &DeepLKey, name: String, source_lang: S
     }
 }
 
+/// This method returns all glossary information if any exist for the user's API key.
 pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::error::Error>> {
     let endpoint = "https://api-free.deepl.com/v2/glossaries";
     let mut glossaries : Vec<Glossary> = Vec::new();
@@ -75,12 +81,12 @@ pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::err
             }
         }, 
         Err(e) => {
-            println!("YOU SUCK : {}", e);
             Err(e)
         }
     }
 }
 
+/// This method retrieves specific glossary information given a glossary ID.
 pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}", glossary_id);
 
@@ -113,6 +119,7 @@ pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Bo
     }
 }
 
+/// This method deletes a specific glossary.  No result is needed for a successful deletion.
 pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}", glossary_id);
 
@@ -140,6 +147,7 @@ pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<d
     }
 }
 
+/// This method returns the values of a specific glossary in a HashMap format.
 pub fn get_glossary_entries(auth: &DeepLKey, glossary_id: String) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}/entries", glossary_id);
 
