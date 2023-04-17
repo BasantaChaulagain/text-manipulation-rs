@@ -19,8 +19,8 @@ pub mod text_manipulation{
             5 => generate_paragraph(Corpus::FromFile("arabic.txt"), Some(50), None),
             6 => generate_paragraph(Corpus::FromFile("japanese.txt"), Some(50), None),
             7 => generate_paragraph(Corpus::FromFile("german.txt"), Some(50), None),
-            10 => generate_paragraph(Corpus::FromFile("corpus/irish.txt"), Some(50), None),
-            11 => generate_paragraph(Corpus::FromFile("corpus/swedish.txt"), Some(50), None),
+            10 => generate_paragraph(Corpus::FromFile("irish.txt"), Some(50), None),
+            11 => generate_paragraph(Corpus::FromFile("swedish.txt"), Some(50), None),
             _ => panic!("Invalid language index"),
         };
         println!("{}", paragraph);
@@ -121,6 +121,43 @@ pub mod text_manipulation{
         }
     }
 
+    use reqwest;
+
+    struct TranslationRequest {
+        q: String,
+        langpair: String,
+    }
+
+    impl TranslationRequest {
+        fn new(q: String, langpair: String) -> Self {
+            Self { q, langpair }
+        }
+    }
+
+    use reqwest::blocking::Client;
+
+    fn translate(request: TranslationRequest) -> Result<String, reqwest::Error> {
+        let url = format!(
+            "https://api.mymemory.translated.net/get?q={}&langpair={}",
+            request.q, request.langpair
+        );
+        let client = Client::new();
+        let response = client.get(&url).send()?;
+        let response_text = response.text()?;
+        Ok(response_text)
+    }
+
+    pub fn translate_q_langpair(q: String, langpair: String) -> String { 
+        let translation_request = TranslationRequest::new(q, langpair);
+        let response_text = translate(translation_request).unwrap();
+        let response_json: serde_json::Value = serde_json::from_str(&response_text).unwrap();
+        let translated_text = response_json["responseData"]["translatedText"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        translated_text
+    }
+
     #[cfg(test)]
     mod tests {
         use std::fs;
@@ -167,6 +204,46 @@ pub mod text_manipulation{
             assert_eq!(file_content.unwrap(), paragraph);
 
             fs::remove_file("test.txt").unwrap();
+        }
+
+        #[test]
+        fn mymemory_nomral_operation() {
+            use crate::text_manipulation::{translate_q_langpair};
+            let q = String::from("Hello");
+            let langpair = String::from("en|it");
+            let result = translate_q_langpair(q, langpair);
+            //print!("{}", result);
+            assert_eq!(result, "Ciao");
+        }
+
+        #[test]
+        fn mymemory_invalid_dest_language() {
+            use crate::text_manipulation::{translate_q_langpair};
+            let q = String::from("Hello");
+            let langpair = String::from("en|sp");
+            let result = translate_q_langpair(q, langpair);
+            //print!("{}", result);
+            assert_eq!(result, "'SP' IS AN INVALID TARGET LANGUAGE . EXAMPLE: LANGPAIR=EN|IT USING 2 LETTER ISO OR RFC3066 LIKE ZH-CN. ALMOST ALL LANGUAGES SUPPORTED BUT SOME MAY HAVE NO CONTENT");
+        }
+
+        #[test]
+        fn mymemory_invalid_format() {
+            use crate::text_manipulation::{translate_q_langpair};
+            let q = String::from("Hello");
+            let langpair = String::from("ensp");
+            let result = translate_q_langpair(q, langpair);
+            //print!("{}", result);
+            assert_eq!(result, "INVALID LANGUAGE PAIR SPECIFIED. EXAMPLE: LANGPAIR=EN|IT USING 2 LETTER ISO OR RFC3066 LIKE ZH-CN. ALMOST ALL LANGUAGES SUPPORTED BUT SOME MAY HAVE NO CONTENT");
+        }
+
+        #[test]
+        fn mymemory_missing_string() {
+            use crate::text_manipulation::{translate_q_langpair};
+            let q = String::from("");
+            let langpair = String::from("en|it");
+            let result = translate_q_langpair(q, langpair);
+            //print!("{}", result);
+            assert_eq!(result, "NO QUERY SPECIFIED. EXAMPLE REQUEST: GET?Q=HELLO&LANGPAIR=EN|IT");
         }
 
         
