@@ -1,10 +1,14 @@
+//! This contains the code for generating random text in different languages.
+
 use rand::{Rng, thread_rng};
 use std::{fs, error::Error, io::{Write}, time::{SystemTime, UNIX_EPOCH}};
 
+/// This enum is responsible for holding the corpus for the language.
 enum Corpus<'a> {
     FromFile(&'a str), 
 }
 
+/// This function generates random text in the language specified by the language index.
 pub fn generate_text_for_language(language: i32, write_to_file: bool) {
     let paragraph = match language {
         0 => generate_paragraph(Corpus::FromFile("corpus/english.txt"), Some(100), Some(1000)),
@@ -32,6 +36,7 @@ pub fn generate_text_for_language(language: i32, write_to_file: bool) {
     }
 }
 
+/// This function reads the corpus from the file and returns a vector of strings.
 fn read_corpus_from_file(path: &str) -> Vec<String> {
     println!("Reading from file: {}", path);
     fs::read_to_string(path)
@@ -41,6 +46,8 @@ fn read_corpus_from_file(path: &str) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
+
+/// This function writes the paragraph to a file.
 fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bool, Box<dyn Error>> {
     let file_name = match path {
         Some(x) => x, 
@@ -59,7 +66,7 @@ fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bo
 
     Ok(true)
 }
-
+/// This function generates a paragraph from the corpus.
 fn generate_paragraph(corpus: Corpus, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
     let mut rng = thread_rng();
 
