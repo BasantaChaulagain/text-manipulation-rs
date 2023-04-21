@@ -1,4 +1,4 @@
-//! This contains the MyMemory API request, the struct that holds the request parameters and the function that makes the request. 
+//! This contains the MyMemory API request, the struct that holds the request parameters and the function that makes the request. This uses the reqwest crate.
 use reqwest;
 use reqwest::blocking::Client;
 

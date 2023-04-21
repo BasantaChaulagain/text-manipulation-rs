@@ -1,4 +1,4 @@
-//! This contains the code for generating random text in different languages.
+//! This contains the code for generating random text in different languages. This uses the rand crate. 
 
 use rand::{Rng, thread_rng};
 use std::{fs, error::Error, io::{Write}, time::{SystemTime, UNIX_EPOCH}};
