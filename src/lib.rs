@@ -1,5 +1,6 @@
 pub mod deepl;
 pub mod request;
+pub mod dictionary;
 
 pub mod text_manipulation{
     use rand::{Rng, thread_rng};
@@ -158,16 +159,18 @@ pub mod text_manipulation{
         translated_text
     }
 
+
     #[cfg(test)]
     mod tests {
-        use std::fs;
+        use std::{fs,path};
         use serde_json::{json, Value};
         use crate::text_manipulation::{generate_paragraph, Corpus, write_paragraph_to_file, generate_text_for_language};
         use crate::deepl::*;
         use crate::request::http_request::{ApiError, HttpRequest, HttpResponseType, RequestType};
         use crate::request::glossary_request::{get_glossaries, get_glossary, delete_glossary, get_glossary_entries, create_glossary_from_string};
         use crate::request::translation_request::TranslationRequest;
-
+        use crate::dictionary::*;
+        
         fn get_auth() -> DeepLKey {
             DeepLKey::new("src/secret.txt").unwrap()
         }
@@ -565,5 +568,34 @@ pub mod text_manipulation{
             let api_error = e.downcast::<ApiError>().unwrap();
             assert_eq!(*api_error, ApiError::Http400);
         }
+
+        // Tests for the dictionary module functions.
+        #[test]
+        // Test function that checks if it has a valid file with secret API.
+        fn valid_dict_secret_path() {
+            let file_path = "dict_secret.txt";
+            let path_exists = path::Path::new(file_path).exists();
+            assert!(path_exists);
+        }
+
+        #[test]
+        // Test function to check if it gives meaning for a valid word.
+        fn test_meaning_of_valid_word() {
+            let word = "ethernet";
+            let meaning = &get_meaning(word).unwrap()[0];
+            // println!("{:#?}", meaning);
+            assert_eq!(meaning, 
+                "a computer network architecture consisting of various specified local-area network protocols, devices, and connection methods")
+        }
+
+        #[test]
+        // Test function to check if it gives meaning for a valid word.
+        fn test_meaning_of_invalid_word() {
+            let word = "asdjhtes";
+            let meaning = &get_meaning(word);
+            // println!("{:#?}", meaning);
+            assert!(meaning.is_err());
+        }
+
     }
 }

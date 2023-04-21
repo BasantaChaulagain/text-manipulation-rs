@@ -8,9 +8,9 @@ use text_generator::generate_text_for_language;
 mod my_memory;
 use my_memory::translate_q_langpair;
 
-#[path = "lib/dictionary.rs"]
-mod dictionary;
-use dictionary::get_meaning;
+// #[path = "lib/dictionary.rs"]
+// mod dictionary;
+// use dictionary::get_meaning;
 
 use text_manipulation_rs::deepl::{DeepLKey, TargetLang, SourceLang};
 use text_manipulation_rs::request::translation_request::{TranslationRequest};
@@ -21,15 +21,15 @@ fn main(){
     // let language = rng.gen_range(0..8);
     // generate_text_for_language(language, false);
 
-    // let q = String::from("My name is Aaron"); 
-    // let langpair = String::from("en|hi"); 
-    // let translated_text = translate_q_langpair(q, langpair);
-    // println!("{}", translated_text);
+    let q = String::from("My name is Aaron"); 
+    let langpair = String::from("en|hi"); 
+    let translated_text = translate_q_langpair(q, langpair);
+    println!("{}", translated_text);
 
-    let meaning = get_meaning("university");
-    println!("{:#?}", meaning);
+    // let meaning = get_meaning("asdjhtes");
+    // println!("{:#?}", meaning);
 
-    deepl();
+    // deepl();
 }
 
 fn deepl() {
