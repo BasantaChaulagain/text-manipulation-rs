@@ -1,175 +1,22 @@
 pub mod deepl;
 pub mod request;
 pub mod dictionary;
+pub mod my_memory;
+pub mod text_generator;
 
 pub mod text_manipulation{
-    use rand::{Rng, thread_rng};
-    use std::{fs, error::Error, io::{Write}, time::{SystemTime, UNIX_EPOCH}};
-    
-    enum Corpus<'a> {
-        FromFile(&'a str), 
-    }
-    
-    pub fn generate_text_for_language(language: i32, write_to_file: bool) {
-        let paragraph = match language {
-            0 => generate_paragraph(Corpus::FromFile("english.txt"), Some(100), Some(1000)),
-            1 => generate_paragraph(Corpus::FromFile("french.txt"), None, None),
-            2 => generate_paragraph(Corpus::FromFile("spanish.txt"), None, Some(500)),
-            3 => generate_paragraph(Corpus::FromFile("hindi.txt"), Some(50), None),
-            4 => generate_paragraph(Corpus::FromFile("russian.txt"), Some(50), None),
-            5 => generate_paragraph(Corpus::FromFile("arabic.txt"), Some(50), None),
-            6 => generate_paragraph(Corpus::FromFile("japanese.txt"), Some(50), None),
-            7 => generate_paragraph(Corpus::FromFile("german.txt"), Some(50), None),
-            10 => generate_paragraph(Corpus::FromFile("irish.txt"), Some(50), None),
-            11 => generate_paragraph(Corpus::FromFile("swedish.txt"), Some(50), None),
-            _ => panic!("Invalid language index"),
-        };
-        println!("{}", paragraph);
-        
-        if write_to_file == true{
-            let res = write_paragraph_to_file(paragraph, None);
-            match res {
-                Ok(_) => println!("File created successfully."), 
-                Err(e) => panic!("{}", e.to_string())
-            };
-        }
-    }
-    
-    fn read_corpus_from_file(path: &str) -> Vec<String> {
-        fs::read_to_string(path)
-            .expect("Failed to parse file.")
-            .split("\n")
-            .map(|s| s.to_owned())
-            .collect::<Vec<String>>()
-    }
-    
-    fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bool, Box<dyn Error>> {
-        let file_name = match path {
-            Some(x) => x, 
-            None => {
-                let time = SystemTime::now().duration_since(UNIX_EPOCH)?;
-                let path = format!("{}.txt", time.as_secs());
-                path
-            }
-        };
-    
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(file_name)?;
-        file.write_all(paragraph.as_bytes())?;
-    
-        Ok(true)
-    }
-    
-    fn generate_paragraph(corpus: Corpus, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
-        let mut rng = thread_rng();
-    
-        let word_list: Vec<String> = match corpus {
-            Corpus::FromFile(f) => {
-                read_corpus_from_file(f)
-            }, 
-        };
-    
-        let n_sentences;
-        if let Some(n) = min_sentences {
-            n_sentences = rng.gen_range(n..n+4);
-        } else {
-            n_sentences = rng.gen_range(3..7);
-        }
-    
-        let mut sentences = Vec::new();
-        for _ in 0..n_sentences {
-            let n_words = rng.gen_range(5..12);
-            let mut words = Vec::new();
-            for _ in 0..n_words {
-                let word_index = rng.gen_range(0..word_list.len());
-                let word = word_list[word_index].as_str();
-                words.push(word);
-            }
-    
-            let mut sentence = words.join(" ");
-            sentence.make_ascii_lowercase();
-    
-            let first_char = sentence.chars().next().unwrap();
-            //first character may not be one byte-aligned
-            let first_char_len = &first_char.len_utf8();
-            sentence.replace_range(..first_char_len, &first_char.to_uppercase().to_string());
-            sentence.push('.');
-            sentences.push(sentence);
-        }
-        
-        let paragraph = sentences.join(" ");
-        
-        match max_bytes {
-            None => paragraph, 
-            Some(m) => {
-                //only read up to limit of bytes requested by the user
-                let mut truncated = String::new();
-                let mut num_bytes: usize = 0;
-                for char in paragraph.chars() {
-                    let len = char.len_utf8();
-                    if num_bytes + len < m {
-                        truncated.push(char);
-                        num_bytes += len;
-                    } else {
-                        break;
-                    }
-                }
-    
-                truncated
-            }
-        }
-    }
-
-    use reqwest;
-
-    struct TranslationRequest {
-        q: String,
-        langpair: String,
-    }
-
-    impl TranslationRequest {
-        fn new(q: String, langpair: String) -> Self {
-            Self { q, langpair }
-        }
-    }
-
-    use reqwest::blocking::Client;
-
-    fn translate(request: TranslationRequest) -> Result<String, reqwest::Error> {
-        let url = format!(
-            "https://api.mymemory.translated.net/get?q={}&langpair={}",
-            request.q, request.langpair
-        );
-        let client = Client::new();
-        let response = client.get(&url).send()?;
-        let response_text = response.text()?;
-        Ok(response_text)
-    }
-
-    pub fn translate_q_langpair(q: String, langpair: String) -> String { 
-        let translation_request = TranslationRequest::new(q, langpair);
-        let response_text = translate(translation_request).unwrap();
-        let response_json: serde_json::Value = serde_json::from_str(&response_text).unwrap();
-        let translated_text = response_json["responseData"]["translatedText"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned();
-        translated_text
-    }
-
-
     #[cfg(test)]
     mod tests {
         use std::{fs,path};
         use serde_json::{json, Value};
-        use crate::text_manipulation::{generate_paragraph, Corpus, write_paragraph_to_file, generate_text_for_language};
+        // use crate::text_manipulation::{generate_paragraph, Corpus, write_paragraph_to_file, generate_text_for_language};
         use crate::deepl::*;
         use crate::request::http_request::{ApiError, HttpRequest, HttpResponseType, RequestType};
         use crate::request::glossary_request::{get_glossaries, get_glossary, delete_glossary, get_glossary_entries, create_glossary_from_string};
         use crate::request::translation_request::TranslationRequest;
-        use crate::dictionary::*;
+        use crate::dictionary::get_meaning;
+        use crate::my_memory::translate_q_langpair;
+        use crate::text_generator::*;
         
         fn get_auth() -> DeepLKey {
             DeepLKey::new("src/secret.txt").unwrap()
@@ -211,7 +58,7 @@ pub mod text_manipulation{
 
         #[test]
         fn mymemory_nomral_operation() {
-            use crate::text_manipulation::{translate_q_langpair};
+            // use crate::text_manipulation::{translate_q_langpair};
             let q = String::from("Hello");
             let langpair = String::from("en|it");
             let result = translate_q_langpair(q, langpair);
@@ -221,7 +68,7 @@ pub mod text_manipulation{
 
         #[test]
         fn mymemory_invalid_dest_language() {
-            use crate::text_manipulation::{translate_q_langpair};
+            // use crate::text_manipulation::{translate_q_langpair};
             let q = String::from("Hello");
             let langpair = String::from("en|sp");
             let result = translate_q_langpair(q, langpair);
@@ -231,7 +78,7 @@ pub mod text_manipulation{
 
         #[test]
         fn mymemory_invalid_format() {
-            use crate::text_manipulation::{translate_q_langpair};
+            // use crate::text_manipulation::{translate_q_langpair};
             let q = String::from("Hello");
             let langpair = String::from("ensp");
             let result = translate_q_langpair(q, langpair);
@@ -241,16 +88,14 @@ pub mod text_manipulation{
 
         #[test]
         fn mymemory_missing_string() {
-            use crate::text_manipulation::{translate_q_langpair};
+            // use crate::text_manipulation::{translate_q_langpair};
             let q = String::from("");
             let langpair = String::from("en|it");
             let result = translate_q_langpair(q, langpair);
             //print!("{}", result);
             assert_eq!(result, "NO QUERY SPECIFIED. EXAMPLE REQUEST: GET?Q=HELLO&LANGPAIR=EN|IT");
         }
-
         
-
         #[test]
         fn valid_key_path() {
             let path = "src/secret.txt";

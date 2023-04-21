@@ -1,28 +1,22 @@
-//! This contains the code for generating random text in different languages. This uses the rand crate. 
-
 use rand::{Rng, thread_rng};
 use std::{fs, error::Error, io::{Write}, time::{SystemTime, UNIX_EPOCH}};
 
-/// This enum is responsible for holding the corpus for the language.
-enum Corpus<'a> {
+pub enum Corpus<'a> {
     FromFile(&'a str), 
 }
 
-/// This function generates random text in the language specified by the language index.
 pub fn generate_text_for_language(language: i32, write_to_file: bool) {
     let paragraph = match language {
-        0 => generate_paragraph(Corpus::FromFile("corpus/english.txt"), Some(100), Some(1000)),
-        1 => generate_paragraph(Corpus::FromFile("corpus/french.txt"), None, None),
-        2 => generate_paragraph(Corpus::FromFile("corpus/spanish.txt"), None, Some(500)),
-        3 => generate_paragraph(Corpus::FromFile("corpus/hindi.txt"), Some(50), None),
-        4 => generate_paragraph(Corpus::FromFile("corpus/russian.txt"), Some(50), None),
-        5 => generate_paragraph(Corpus::FromFile("corpus/arabic.txt"), Some(50), None),
-        6 => generate_paragraph(Corpus::FromFile("corpus/japanese.txt"), Some(50), None),
-        7 => generate_paragraph(Corpus::FromFile("corpus/german.txt"), Some(50), None),
-        8 => generate_paragraph(Corpus::FromFile("corpus/latin.txt"), Some(50), None),
-        9 => generate_paragraph(Corpus::FromFile("corpus/czech.txt"), Some(50), None),
-        10 => generate_paragraph(Corpus::FromFile("corpus/irish.txt"), Some(50), None),
-        11 => generate_paragraph(Corpus::FromFile("corpus/swedish.txt"), Some(50), None),
+        0 => generate_paragraph(Corpus::FromFile("english.txt"), Some(100), Some(1000)),
+        1 => generate_paragraph(Corpus::FromFile("french.txt"), None, None),
+        2 => generate_paragraph(Corpus::FromFile("spanish.txt"), None, Some(500)),
+        3 => generate_paragraph(Corpus::FromFile("hindi.txt"), Some(50), None),
+        4 => generate_paragraph(Corpus::FromFile("russian.txt"), Some(50), None),
+        5 => generate_paragraph(Corpus::FromFile("arabic.txt"), Some(50), None),
+        6 => generate_paragraph(Corpus::FromFile("japanese.txt"), Some(50), None),
+        7 => generate_paragraph(Corpus::FromFile("german.txt"), Some(50), None),
+        10 => generate_paragraph(Corpus::FromFile("irish.txt"), Some(50), None),
+        11 => generate_paragraph(Corpus::FromFile("swedish.txt"), Some(50), None),
         _ => panic!("Invalid language index"),
     };
     println!("{}", paragraph);
@@ -36,9 +30,7 @@ pub fn generate_text_for_language(language: i32, write_to_file: bool) {
     }
 }
 
-/// This function reads the corpus from the file and returns a vector of strings.
 fn read_corpus_from_file(path: &str) -> Vec<String> {
-    println!("Reading from file: {}", path);
     fs::read_to_string(path)
         .expect("Failed to parse file.")
         .split("\n")
@@ -46,9 +38,7 @@ fn read_corpus_from_file(path: &str) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
-
-/// This function writes the paragraph to a file.
-fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bool, Box<dyn Error>> {
+pub fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bool, Box<dyn Error>> {
     let file_name = match path {
         Some(x) => x, 
         None => {
@@ -66,8 +56,8 @@ fn write_paragraph_to_file(paragraph: String, path: Option<String>) -> Result<bo
 
     Ok(true)
 }
-/// This function generates a paragraph from the corpus.
-fn generate_paragraph(corpus: Corpus, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
+
+pub fn generate_paragraph(corpus: Corpus, min_sentences: Option<usize>, max_bytes: Option<usize>) -> String {
     let mut rng = thread_rng();
 
     let word_list: Vec<String> = match corpus {
