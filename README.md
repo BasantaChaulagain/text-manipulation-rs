@@ -32,6 +32,7 @@ __Word/Sentence Translation:__
 2. Use the crate and call the function in your code file. The parameters of the function 'translate_q_pair' are q: String and langpair: String. 
 3. The parameter q:  the text a user wants to translate. 
 4. The parameter langpair: Source and destination language separated by '|'. Keep in mind the langpair parameter follows a strict format that follows RFC 3066/2 letter ISO. Check this out for guidance - http://www.i18nguy.com/unicode/language-identifiers.html. 
+
 ```
 use text_manipulation_rs::text_manipulation;
 ...

@@ -5,6 +5,7 @@ pub mod my_memory;
 pub mod text_generator;
 
 pub mod text_manipulation{
+
     #[cfg(test)]
     mod tests {
         use std::{fs,path};
