@@ -15,7 +15,6 @@ There are four modules in this crate with the following features:
 use text_manipulation_rs::text_generator;
 text_generator::generate_text_for_language(language: i32, write_to_file: bool);
 ```
-
 ### Languages supported
 0 => english \
 1 => french \
