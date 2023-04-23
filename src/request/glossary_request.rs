@@ -1,9 +1,16 @@
+//! Glossaries in DeepL are used to manually inform the translation service how certain words should be translated.  Users can use this module to create, delete, and get glossary information and entries.
+
 use std::collections::HashMap;
 
 use crate::deepl::{SourceLang, TargetLang, Glossary, DeepLKey};
 use crate::request::http_request::{HttpRequest, RequestType, HttpResponseType};
 use serde_json::Value;
 
+use super::http_request::ApiError;
+
+/// Given a string of tab-separated values, this function will return the glossary information if it is successfully created.
+/// 
+/// An example of a TSV string is: "Hello\tHallo\nBye\tTschüss".
 pub fn create_glossary_from_string(auth: &DeepLKey, name: String, source_lang: SourceLang, target_lang: TargetLang, entries: String) -> Result<Value, Box<dyn std::error::Error>> {
     let endpoint = "https://api-free.deepl.com/v2/glossaries";
     let mut params : Vec<String> = Vec::new();
@@ -25,16 +32,22 @@ pub fn create_glossary_from_string(auth: &DeepLKey, name: String, source_lang: S
 
     let res = request.execute();
 
-    if let Ok(v) = res {
-        match v {
-            HttpResponseType::Json(val) => Ok(val), 
-            _ => panic!("todo: refactor")
+    match res {
+        Ok(v) => {
+            if let HttpResponseType::Json(j) = v {
+                Ok(j)
+            } else {
+                //should be unreachable, since response_type is matched in execute()
+                Err(Box::new(ApiError::Teapot))
+            }
+        }, 
+        Err(e) => {
+            Err(e)
         }
-    } else {
-        panic!("Error")
     }
 }
 
+/// This method returns all glossary information if any exist for the user's API key.
 pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::error::Error>> {
     let endpoint = "https://api-free.deepl.com/v2/glossaries";
     let mut glossaries : Vec<Glossary> = Vec::new();
@@ -50,32 +63,36 @@ pub fn get_glossaries(auth: &DeepLKey) -> Result<Vec<Glossary>, Box<dyn std::err
 
     let res = request.execute();
 
-    if let Ok(v) = res {
-        match v {
-            HttpResponseType::Json(j) => {
-                let g = &j["glossaries"];
-                let arr = g.as_array().unwrap();
-
-                for entry in arr.to_owned() {
-                    let gloss = Glossary::new(entry);
-                    glossaries.push(gloss);
-                }
-
-                Ok(glossaries)
-            }, 
-            _ => panic!("panic")
+    match res {
+        Ok(v) => {
+            match v {
+                HttpResponseType::Json(j) => {
+                    let g = &j["glossaries"];
+                    let arr = g.as_array().unwrap();
+    
+                    for entry in arr.to_owned() {
+                        let gloss = Glossary::new(entry);
+                        glossaries.push(gloss.unwrap());
+                    }
+    
+                    Ok(glossaries)
+                }, 
+                _ => Err(Box::new(ApiError::Teapot))
+            }
+        }, 
+        Err(e) => {
+            Err(e)
         }
-    } else {
-        panic!("I forgot how to pass error statements")
     }
 }
 
+/// This method retrieves specific glossary information given a glossary ID.
 pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}", glossary_id);
 
     let request = HttpRequest {
         auth: &auth.key, 
-        endpoint: &endpoint.as_str(), 
+        endpoint: endpoint.as_str(), 
         headers: None, 
         body: None, 
         request_type: RequestType::Get, 
@@ -84,20 +101,25 @@ pub fn get_glossary(auth: &DeepLKey, glossary_id: String) -> Result<Glossary, Bo
 
     let res = request.execute();
 
-    if let Ok(g) = res {
-        match g {
-            HttpResponseType::Json(j) => {
-                let glossary = Glossary::new(j);
-
-                Ok(glossary)
-            }, 
-            _ => panic!("refactor please")
+    match res {
+        Ok(g) => {
+            match g {
+                HttpResponseType::Json(j) => {
+                    let glossary = Glossary::new(j);
+    
+                    Ok(glossary.unwrap())
+                }, 
+                _ => Err(Box::new(ApiError::Teapot))
+            }
+        }, 
+        Err(e) => {
+            println!("ee: {}", e);
+            Err(e)
         }
-    } else {
-        panic!("Git gud");
     }
 }
 
+/// This method deletes a specific glossary.  No result is needed for a successful deletion.
 pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}", glossary_id);
 
@@ -112,26 +134,23 @@ pub fn delete_glossary(auth: &DeepLKey, glossary_id: String) -> Result<(), Box<d
 
     let res = request.execute();
 
-    if let Ok(m) = res {
-        match m {
-            HttpResponseType::Tsv(message) => {
-                ////TODO: return error if message "Not found" returned
-                println!("MESSAGE: {}", message);
-                Ok(())
-            }, 
-            _ => panic!("fail")
-        }
-
-        // Ok(())
-    } else {
-        panic!("Git gud");
+    match res {
+        Ok(m) => {
+            match m {
+                HttpResponseType::Tsv(_) => {
+                    Ok(())
+                }, 
+                _ => Err(Box::new(ApiError::Teapot))
+            }
+        }, 
+        Err(e) => Err(e)
     }
 }
 
+/// This method returns the values of a specific glossary in a HashMap format.
 pub fn get_glossary_entries(auth: &DeepLKey, glossary_id: String) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
     let endpoint = format!("https://api-free.deepl.com/v2/glossaries/{}/entries", glossary_id);
 
-    // let params = vec![];
     let mut params : Vec<String> = Vec::new();
     params.push(String::from("Accept: text/tab-separated-values"));
 
@@ -146,23 +165,24 @@ pub fn get_glossary_entries(auth: &DeepLKey, glossary_id: String) -> Result<Hash
 
     let res = request.execute();
 
-    if let Ok(map) = res {
-        let mut hm : HashMap<String, String> = HashMap::new();
+    match res {
+        Ok(map) => {
+            let mut hm : HashMap<String, String> = HashMap::new();
 
-        match map {
-            HttpResponseType::Tsv(t) => {
-                let rows : Vec<&str> = t.split("\n").collect();
-                for row in rows {
-                    let key_val : Vec<&str> = row.split("\t").collect();
+            match map {
+                HttpResponseType::Tsv(t) => {
+                    let rows : Vec<&str> = t.split("\n").collect();
+                    for row in rows {
+                        let key_val : Vec<&str> = row.split("\t").collect();
 
-                    hm.insert(key_val[0].to_string(), key_val[1].to_string());
-                }
-            }, 
-            _ => panic!("uh ohhh")
-        }
+                        hm.insert(key_val[0].to_string(), key_val[1].to_string());
+                    }
+                }, 
+                _ => panic!("uh ohhh")
+            }
 
-        Ok(hm)
-    } else {
-        panic!("Git gud");
+            Ok(hm)
+        }, 
+        Err(e) => Err(e)
     }
 }

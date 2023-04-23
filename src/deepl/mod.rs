@@ -1,55 +1,120 @@
-//pub mod deepl;
+//! This module gives general DeepL API access and translation information needed for translation requests.
 
 use serde_json::{Value};
 use std::{fmt::Display, str::FromStr};
 use std::fs;
 
-fn read_secret(path: &str) -> String {
+fn read_secret(path: &str) -> Result<String, std::io::Error> {
     fs::read_to_string(path)
-        .expect("Failed to parse file.")
 }
 
+/// All DeepL requests need a valid API key to function.
 pub struct DeepLKey {
+    /// The user's DeepL API key
     pub key: String, 
 }
 
 impl<'a> DeepLKey {
+    /// This function reads the user's API key from a specified text file.  
+    /// If it isn't found, it will return an error.
     pub fn new(path: &'a str) -> Result<DeepLKey, std::io::Error> {
-        let key = read_secret(path);
+        let res = read_secret(path);
 
-        Ok(DeepLKey {key})
+        match res {
+            Ok(key) => Ok(DeepLKey { key }), 
+            Err(e) => Err(e)
+        }
     }
 }
 
+/// For any translation request, these are the possible source languages the user can opt to specify.  
+/// When using a glossary in a translation request, SourceLang is required.
 pub enum SourceLang {
+    ///Bulgarian
     Bg, 
+
+    ///Czech
     Cs, 
+
+    ///Danish
     Da, 
+
+    ///German
     De, 
+
+    ///Greek
     El, 
+
+    ///English
     En, 
-    Es, 
-    Et, 
-    Fi, 
-    Fr, 
-    Hu, 
-    Id, 
-    It, 
-    Ja, 
-    Ko, 
-    Lt, 
-    Lv, 
-    Nb, 
-    Nl, 
-    Pl, 
-    Pt, 
-    Ro, 
-    Ru, 
-    Sk, 
-    Sl, 
-    Sv, 
-    Tr, 
-    Uk, 
+    
+    ///Spanish 
+    Es,
+    
+    /// Estonian
+    Et,
+    
+    /// Finnish
+    Fi,
+    
+    /// French
+    Fr,
+    
+    /// Hungarian
+    Hu,
+    
+    /// Indonesian
+    Id,
+    
+    /// Italian
+    It,
+    
+    /// Japanese
+    Ja,
+    
+    /// Korean
+    Ko,
+    
+    /// Lithuanian
+    Lt,
+    
+    /// Latvian
+    Lv,
+
+    /// Norwegian (Bokmål)
+    Nb,
+    
+    /// Dutch
+    Nl,
+    
+    /// Polish
+    Pl,
+    
+    /// Portuguese
+    Pt,
+    
+    /// Romanian
+    Ro,
+    
+    /// Russian
+    Ru,
+    
+    /// Slovak
+    Sk,
+    
+    /// Slovenian
+    Sl,
+    
+    /// Swedish
+    Sv,
+    
+    /// Turkish
+    Tr,
+    
+    /// Ukrainian
+    Uk,
+    
+    /// Chinese
     Zh,
 }
 
@@ -128,40 +193,107 @@ impl FromStr for SourceLang {
     }
 }
 
+/// For each translation/glossary request, the target language is always required.  
+/// This is the language that the desired text should be translated to/the target language for the glossary definitions.
 pub enum TargetLang {
-    Bg,
-    Cs,
-    Da,
-    De,
-    El,
-    En,
+    ///Bulgarian
+    Bg, 
+
+    ///Czech
+    Cs, 
+
+    ///Danish
+    Da, 
+
+    ///German
+    De, 
+
+    ///Greek
+    El, 
+
+    ///English (please use EN-GB or EN-US instead)
+    En, 
+
+    ///British English
     EnGb,
+
+    ///American English
     EnUs,
+
+    ///Spanish 
     Es,
+    
+    /// Estonian
     Et,
+    
+    /// Finnish
     Fi,
+    
+    /// French
     Fr,
+    
+    /// Hungarian
     Hu,
+    
+    /// Indonesian
     Id,
+    
+    /// Italian
     It,
+    
+    /// Japanese
     Ja,
+    
+    /// Korean
     Ko,
+    
+    /// Lithuanian
     Lt,
+    
+    /// Latvian
     Lv,
+
+    /// Norwegian (Bokmål)
     Nb,
+    
+    /// Dutch
     Nl,
+    
+    /// Polish
     Pl,
+    
+    /// Portuguese (please use PT-BR or PT-PT instead)
     Pt,
+
+    ///Brazilian Portuguese
     PtBr,
+
+    ///Portuguese (all Portuguese varieties excluding Brazilian Portuguese)
     PtPt,
+    
+    /// Romanian
     Ro,
+    
+    /// Russian
     Ru,
+    
+    /// Slovak
     Sk,
+    
+    /// Slovenian
     Sl,
+    
+    /// Swedish
     Sv,
+    
+    /// Turkish
     Tr,
+    
+    /// Ukrainian
     Uk,
-    Zh, 
+    
+    /// Chinese
+    Zh,
 }
 
 impl Display for TargetLang {
@@ -247,9 +379,17 @@ impl FromStr for TargetLang {
     }
 }
 
+/// Dictates whether/where sentences in a translation request should be split.
+/// 
+/// For text translations where tag_handling is not set to html, the default value is 1, meaning the engine splits on punctuation and on newlines.
+///
+/// For text translations where tag_handling=html, the default value is nonewlines, meaning the engine splits on punctuation only, ignoring newlines.
 pub enum SplitSentences {
+    /// Do not split sentences
     None, 
+    ///Split on all punctuation and newlines
     PunctuationAndNewline, 
+    ///Ignores newline
     Punctuation, 
 }
 
@@ -263,11 +403,21 @@ impl Display for SplitSentences {
     }
 }
 
+/// Dictates the formality of the output translated text.
 pub enum Formality {
+    /// Default formality
     Default, 
+
+    /// Use more formal language
     More, 
+
+    /// Use less formal language
     Less, 
+
+    /// Use more formal language if possible and use default formality otherwise
     PreferMore, 
+
+    /// Use less formal language if possible and use default formality otherwise
     PreferLess
 }
 
@@ -283,8 +433,12 @@ impl Display for Formality {
     }
 }
 
+/// Determines which types of tags should be handled in the request.
 pub enum TagHandling {
+    ///Handle XML tags
     Xml, 
+
+    ///Handle HTML tags
     Html
 }
 
@@ -297,17 +451,37 @@ impl Display for TagHandling {
     }
 }
 
+/// A Glossary maps words from a source language to desired translations in a target language.
+/// 
+/// For example, an English to German glossary "Hello\tHallo" would translate 
+/// "Hello" to "Hallo" over other possible greetings.
+/// 
+/// This information is returned when creating/querying a glossary.  You can request 
+/// glossary entries and other actions through the [glossary_request](super::request::glossary_request) module.
 pub struct Glossary {
-    glossary_id: String, 
-    name: String, 
-    ready: bool, 
-    source_lang: SourceLang, 
-    target_lang: TargetLang, 
-    creation_time: String, 
-    entry_count: u64
+    /// Generated ID for this glossary
+    pub glossary_id: String, 
+
+    /// Name of the Glossary
+    pub name: String, 
+
+    ///Whether or not the Glossary can be used
+    pub ready: bool, 
+
+    ///Source Language of Glossary definitions
+    pub source_lang: SourceLang, 
+
+    ///Target Language of Glossary definitions
+    pub target_lang: TargetLang, 
+
+    ///When the Glossary was created
+    pub creation_time: String, 
+
+    ///Number of entries defined in the Glossary
+    pub entry_count: u64
 }
 
-fn capitalize(s: &str) -> String {
+fn capitalize(s: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut vec : Vec<String> = Vec::new();
 
     //capitalize each character in given string
@@ -316,23 +490,39 @@ fn capitalize(s: &str) -> String {
         vec.push(upper);
     }
 
-    vec.join("")
+    Ok(vec.join(""))
 }
 
-impl Glossary {
-    pub fn new(v: Value) -> Glossary {
-        let upper_source = capitalize(v["source_lang"].as_str().unwrap());
-        let upper_target = capitalize(v["target_lang"].as_str().unwrap());
+#[derive(Debug)]
+struct GlossaryError;
 
-        Glossary {
-            glossary_id: v["glossary_id"].to_string(),
+impl Display for GlossaryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Invalid Glossary")
+    }
+}
+
+impl std::error::Error for GlossaryError {}
+
+impl Glossary {
+    /// Given a Json object, this method constructs a Glossary object or a GlossaryError otherwise.
+    pub fn new(v: Value) -> Result<Glossary, Box<dyn std::error::Error>> {
+        let us = v["source_lang"].as_str().ok_or(GlossaryError)?;
+        let upper_source = capitalize(us)?;
+        let ut = v["target_lang"].as_str().ok_or(GlossaryError)?;
+        let upper_target = capitalize(ut)?;
+
+        let gid = v["glossary_id"].to_string();
+
+        Ok(Glossary {
+            glossary_id: gid[1..gid.len()-1].to_string(),
             name: v["name"].to_string(),
             ready: v["ready"].as_bool().unwrap(),
             source_lang: SourceLang::from_str(&upper_source.as_str()).unwrap(),
             target_lang: TargetLang::from_str(&upper_target.as_str()).unwrap(),
             creation_time: v["creation_time"].to_string(),
             entry_count: v["entry_count"].as_u64().unwrap() 
-        }
+        })
     }
 }
 
