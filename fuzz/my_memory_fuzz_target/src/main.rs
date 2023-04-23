@@ -2,7 +2,7 @@
 extern crate afl;
 extern crate text_manipulation_rs;
 
-use text_manipulation_rs::text_manipulation::translate_q_langpair;
+use text_manipulation_rs::my_memory::translate_q_langpair;
 
 fn main() {
     fuzz!(|data: &[u8]| {
