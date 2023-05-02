@@ -75,7 +75,7 @@ use text_manipulation_rs::request::translation_request::{TranslationRequest};
 
 let auth = DeepLKey::new("/path/to/secret.txt").unwrap();
 let tr = TranslationRequest::new("Hello, World!", TargetLang::De);
-let request = TranslationRequest::create_request(&auth);
+let request = tr.create_request(&auth);
 let res = request.execute();
 ```
 
