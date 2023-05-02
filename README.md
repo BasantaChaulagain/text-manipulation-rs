@@ -51,7 +51,7 @@ This module uses an API from [Merriam-Webster developer center](https://dictiona
 
 ```
 use text_manipulation_rs::dictionary;
-dictionary::translate_q_langpair(q: String, langpair: String);
+dictionary::get_meaning(word: &str);
 ```
 
 ## deepl:
